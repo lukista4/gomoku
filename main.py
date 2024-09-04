@@ -21,7 +21,8 @@ CIRCLE_RADIUS = SQUARE_SIZE // 3
 CIRCLE_WIDTH = 4
 
 DEPTH = 3
-BRANCH = 50
+BRANCH = 100
+AGGRESSIVITY = 4
 
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("GOMOKU")
@@ -41,7 +42,6 @@ def draw_lines(color=BLACK):
 
 def draw_figures():
     global history
-    global PC
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
             if board[row*BOARD_ROWS + col] == 1:
@@ -74,6 +74,11 @@ def draw_figures():
                             pygame.draw.circle(screen, GREEN, (
                                 int(col * SQUARE_SIZE + SQUARE_SIZE // 2), int(row * SQUARE_SIZE + SQUARE_SIZE // 2)),
                                                CIRCLE_RADIUS, CIRCLE_WIDTH)
+            #kvuli mazani
+            else:
+                pygame.draw.circle(screen, ORANGE, (
+                    int(col * SQUARE_SIZE + SQUARE_SIZE // 2), int(row * SQUARE_SIZE + SQUARE_SIZE // 2)),
+                                   CIRCLE_RADIUS)
 
 
 def mark_square(position, player):
@@ -116,31 +121,29 @@ def board_del(move, checkboard=board):
     checkboard[move] = 0
 
 # pridat xxx-- a xx---
-p1 = [[1,1,1,1,1], [0,1,1,1,1,0],[0,1,1,1,0,0],[0,0,1,1,1,0],[0,1,1,0,1,0],[0,1,0,1,1,0],[0,1,1,1,1],[1,0,1,1,1],[1,1,0,1,1],[1,1,1,0,1],[1,1,1,1,0], [0,1,1,1,0],[1,0,1,1,0],[0,1,1,0,1],[1,0,1,0,1], [0,1,1,0,0], [0,0,1,1,0],[0,1,0,1,0]]
-p2 = [[2,2,2,2,2], [0,2,2,2,2,0],[0,2,2,2,0,0],[0,0,2,2,2,0],[0,2,2,0,2,0],[0,2,0,2,2,0],[0,2,2,2,2],[2,0,2,2,2],[2,2,0,2,2],[2,2,2,0,2],[2,2,2,2,0], [0,2,2,2,0], [2,0,2,2,0],[0,2,2,0,2],[2,0,2,0,2], [0,2,2,0,0], [0,0,2,2,0], [0,2,0,2,0]]
+d1 = {(1, 1, 1, 1, 1): 100000000000000, (0, 1, 1, 1, 1, 0): 100000, (0, 1, 1, 1, 0, 0): 1000, (0, 0, 1, 1, 1, 0): 1000, (0, 1, 1, 0, 1, 0): 400, (0, 1, 0, 1, 1, 0): 400, (0, 1, 1, 1, 1): 1000, (1, 0, 1, 1, 1): 800, (1, 1, 0, 1, 1): 800, (1, 1, 1, 0, 1): 800, (1, 1, 1, 1, 0): 1000, (0, 1, 1, 1, 0): 600, (1, 0, 1, 1, 0): 200, (0, 1, 1, 0, 1): 200, (1, 0, 1, 0, 1): 100, (0, 1, 1, 0, 0): 100, (0, 0, 1, 1, 0): 100, (0, 1, 0, 1, 0): 80}
+d2 = {(2, 2, 2, 2, 2): 100000000000000, (0, 2, 2, 2, 2, 0): 100000, (0, 2, 2, 2, 0, 0): 1000, (0, 0, 2, 2, 2, 0): 1000, (0, 2, 2, 0, 2, 0): 400, (0, 2, 0, 2, 2, 0): 400, (0, 2, 2, 2, 2): 800, (2, 0, 2, 2, 2): 800, (2, 2, 0, 2, 2): 800, (2, 2, 2, 0, 2): 800, (2, 2, 2, 2, 0): 1000, (0, 2, 2, 2, 0): 600, (2, 0, 2, 2, 0): 200, (0, 2, 2, 0, 2): 200, (2, 0, 2, 0, 2): 100, (0, 2, 2, 0, 0): 100, (0, 0, 2, 2, 0): 100, (0, 2, 0, 2, 0): 80}
 
-p = [100000000000000, 100000, 1000, 1000,400,400,1200,1200,1200,1200,1200,800,200,200,100, 100, 100,80]
-pp = [100000000000000, 100000, 1000, 1000,400,400,1200,1200,1200,1200,1200,800,200,200,100, 100, 100,80]
+
 
 def structure_eval(structure, player):
     score = 0
-    if len(structure) > 4:
+    len(structure)
+    if  len(structure) > 4:
         if player == 1:
             for j in range(2):
                 for i in range(len(structure) - 4):
-                    test = list(structure[i:i + 5 + j])
-                    if test in p1:
-                        check = pp[p1.index(test)]
-                        if score < check:
-                            score = check
+                    test = tuple(structure[i:i + 5 + j])
+                    check = d1.get(test,0)
+                    if score < check:
+                        score = check
         else:
             for j in range(2):
                 for i in range(len(structure) - 4):
-                    test = list(structure[i:i + 5 + j])
-                    if test in p2:
-                        check = p[p2.index(test)]
-                        if score < check:
-                            score = check
+                    test = tuple(structure[i:i + 5 + j])
+                    check = d2.get(test, 0)
+                    if score < check:
+                        score = check
     return score
 
 
@@ -258,125 +261,189 @@ def erase(checkboard=board):
 
 
 def best_move(player,last_move=None):
+    global history
     print(f"------ move:{len(history)+1}, nodes: {ppp}")
     if last_move == None:
         return 112
     player2 = player % 2 + 1
-    plys = len(history)
-    if plys>= 3:
-        score0 = minimax(1, player, [last_move], float('-inf'), float('inf'), board, 70)
-        check = score0[0]
-        print(check)
-        if abs(check) >= 50000000000000:
-            if player == 2:
-                if check >= 50000000000000:
-                    print(score0)
-                    return score0[1]
-            else:
-                if check <= -50000000000000:
-                    print(score0)
-                    return score0[1]
-
-        score0 = minimax(1, player2, [last_move], float('-inf'), float('inf'), board, 70)
-        check = score0[0]
-        print(check)
-        if abs(check) >= 50000000000000:
-            if player == 2:
-                if check <= -50000000000000:
-                    print(score0)
-                    return score0[1]
-            else:
-                if check >= 50000000000000:
-                    print(score0)
-                    return score0[1]
-
-
-
-
-        score2 = minimax(DEPTH, player, [last_move], float('-inf'), float('inf'), board, BRANCH)
+    if len(history)>2:
+        score0 = minimax(1, player, [last_move], float('-inf'), float('inf'), board, 100)
         check0 = score0[0]
-        check = score2[0]
-        if abs(check) >= 90000 and abs(check0) < 300000:
-            if player == 2:
-                if check >= 90000:
-                    print(score2)
-                    move = score2[1]
-                    return move
-            else:
-                if check <= -90000:
-                    print(score2)
-                    move = score2[1]
-                    return move
+        print(check0)
+        if check0 >= 50000000000000:
+            print("test1")
+            print(score0)
+            return score0[1]
 
+        score1 = minimax(1, player2, [last_move], float('-inf'), float('inf'), board, 100)
+        check1 = score1[0]
+        print(check1)
+        if check1 <= -50000000000000:
+            print("test2")
+            print(score1)
+            return score1[1]
 
-        if abs(check0) >= 90000:
-            if player == 2:
-                if check0 <= -90000:
-                    print(score0)
-                    return score0[1]
-            else:
-                if check >= 90000:
-                    print(score0)
-                    return score0[1]
-
-        threats = []
-        for move in children([last_move], board, BRANCH):
-            board_add(player2, move, board)
-            score1 = minimax(2, player, [last_move, move], float('-inf'), float('inf'), board, BRANCH)
-            board_del(move, board)
-            threats.append(score1)
-            if len(threats) > 3:
-                if player == 2:
-                    t2 = sorted(threats, key=lambda x: x[0])
-                else:
-                    t2 = sorted(threats, key=lambda x: x[0], reverse=True)
-                threats = t2[:3]
-
-        move = threats[0][1]
-        score = threats[0][0]
-        if abs(score) >= 100000:
-            print(threats, score2, (score, move))
+        if check0 >= 90000 and check1 > -300000:
+            print("test3")
+            print(score0)
+            move = score0[1]
             return move
 
-        if 5 *abs(check) >= abs(score):
-            score = score2[0]
+        score2 = minimax(DEPTH, player, [last_move], float('-inf'), float('inf'), board, BRANCH)
+        check2 = score2[0]
+
+        if check2 >= 90000 and check1 > -300000:
+            print("test4")
+            print(score2)
             move = score2[1]
-        else:
-            for i in range(3):
-                if score2[1] == threats[i][1]:
-                    score = score2[0]
-                    move = score2[1]
+            return move
 
-        print(threats, score0 , score2, (score, move))
+        score3 = minimax(DEPTH, player2, [last_move], float('-inf'), float('inf'), board, BRANCH)
+        move = score3[1]
+        check3 = score3[0]
+        if check3 <= -90000:
+            print("test5")
+            print(score2,score3,move)
+            return move
 
+        if AGGRESSIVITY * 400 + check2 + check3 >= 0:
+            print(f"Aggressivity:{AGGRESSIVITY * 500 + check2 + check3}")
+            move = score2[1]
+            print("test6")
+            print(score2, score3, move)
+            return move
+
+        print("test7")
+        print(score2, score3, move)
         return move
-
-
-    score2 = minimax(3, player, [last_move], float('-inf'), float('inf'), board, 40)
-
-    move = score2[1]
-
-    print(score2)
-    return move
+    else:
+        score2 = minimax(DEPTH, player, [last_move], float('-inf'), float('inf'), board, 40)
+        return score2[1]
 
 
 def restart_game():
+    global history, player, game_over, restart, first, ppp
     screen.fill(ORANGE)
     draw_lines()
     for row in range(BOARD_ROWS):
         for col in range(BOARD_COLS):
             board[row*BOARD_ROWS + col] = 0
+    game_over = False
+    restart = True
+    first = first % 2 + 1
+    history = []
+    player = 1
+    ppp = 1
 
 
-draw_lines()
+def user_input():
+    global game_over, winner, player, restart, history, first
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            sys.exit()
+
+        if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
+            mouseX = event.pos[0] // SQUARE_SIZE
+            mouseY = event.pos[1] // SQUARE_SIZE
+
+            if available_square(mouseY * BOARD_ROWS + mouseX):
+                process_move(mouseY * BOARD_ROWS + mouseX, player)
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_r:
+                restart_game()
+                pygame.display.update()
+            if event.key == pygame.K_LEFT:
+                if player == 1:
+                    if first == 2:
+                        if len(history)>2:
+                            if winner == 1:
+                                board[history.pop()] = 0
+                            else:
+                                board[history.pop()] = 0
+                                board[history.pop()] = 0
+                            if game_over:
+                                game_over = False
+                                winner = 0
+                                draw_lines()
+                            update_display()
+                    else:
+                        if len(history)>1:
+                            if winner == 1:
+                                board[history.pop()] = 0
+                            else:
+                                board[history.pop()] = 0
+                                board[history.pop()] = 0
+                            if game_over:
+                                game_over = False
+                                winner = 0
+                                draw_lines()
+                            update_display()
+
+
+
+
+def process_move(move, player):
+    global game_over, winner
+    erase()
+    square = mark_square(move, player)
+    history.append(square)
+    draw_figures()
+    pygame.display.update()
+    if check_win(player, square):
+        game_over = True
+        winner = player
+
+    elif is_board_full():
+        game_over = True
+        winner = 0
+
+    if not game_over:
+        computer_move()
+
+
+
+def computer_move():
+    global player, game_over, winner
+    player = player % 2 + 1
+    last = history[-1]
+    move = best_move(player, last)
+    erase()
+    mark_square(move, player)
+    draw_pot(children([last]))
+    history.append(move)
+    if check_win(player, move):
+        game_over = True
+        winner = player
+    elif is_board_full():
+        game_over = True
+        winner = 0
+    player = player % 2 + 1
+
+def update_display():
+    draw_figures()
+    if game_over:
+        if winner == 1:
+            draw_lines(GREEN)
+        elif winner == 2:
+            draw_lines(RED)
+        else:
+            draw_lines(GREY)
+    pygame.display.update()
+
+
+
+
+
+
 history = []
 player = 1
 first = 1
 winner = 0
 game_over = False
 restart = False
-PC = False
 
+draw_lines()
 
 while True:
     restart = False
@@ -385,117 +452,11 @@ while True:
         history.append(square)
         draw_figures()
         pygame.display.update()
+
     while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
+        user_input()
 
-            if not PC:
-                if event.type == pygame.MOUSEBUTTONDOWN and not game_over:
-                    mouseX = event.pos[0] // SQUARE_SIZE
-                    mouseY = event.pos[1] // SQUARE_SIZE
-
-                    if available_square(mouseY * BOARD_ROWS + mouseX):
-                        erase()
-                        square = mark_square(mouseY * BOARD_ROWS + mouseX, player)
-                        history.append(square)
-                        if check_win(player, square):
-                            game_over = True
-                            winner = player
-                        player = player % 2 + 1
-                        draw_figures()
-                        pygame.display.update()
-
-                        if not game_over:
-                            if is_board_full():
-                                game_over = True
-                                winner = 0
-
-                        if not game_over:
-                            move = best_move(player,square)
-                            draw_pot(children([square]))
-                            history.append(move)
-                            mark_square(move, player)
-                            if check_win(player, move):
-                                game_over = True
-                                winner = player
-                            player = player % 2 + 1
-
-                        if not game_over:
-                            if is_board_full():
-                                game_over = True
-                                winner = 0
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_r:
-                    restart_game()
-                    pygame.display.update()
-                    game_over = False
-                    restart = True
-                    PC = False
-                    first = first % 2 + 1
-                    history = []
-                    player = 1
-                    ppp = 1
-
-                if event.key == pygame.K_p:
-                    if PC:
-                        PC = False
-                    else:
-                        PC = True
-
-        if PC:
-            if not game_over:
-                square = None
-                if history:
-                    square = history[-1]
-                erase()
-                move = best_move(player, square)
-                history.append(move)
-                draw_pot(children([move]))
-                mark_square(move, player)
-                draw_figures()
-                pygame.display.update()
-
-                if check_win(player, move):
-                    game_over = True
-                    winner = player
-                player = player % 2 + 1
-
-            if not game_over:
-                if is_board_full():
-                    game_over = True
-                    winner = 0
-
-            if not game_over:
-                erase()
-                move = best_move(player, move)
-                draw_pot(children([move]))
-                history.append(move)
-                mark_square(move, player)
-
-                if check_win(player, move):
-                    game_over = True
-                    winner = player
-                player = player % 2 + 1
-
-            if not game_over:
-                if is_board_full():
-                    game_over = True
-                    winner = 0
         if restart:
             break
-        if not game_over:
-            draw_figures()
-        else:
-            draw_figures()
-            if winner == 1:
-                draw_lines(GREEN)
 
-            elif winner == 2:
-                draw_lines(RED)
-            else:
-                draw_lines(GREY)
-
-        pygame.display.update()
-
+        update_display()
