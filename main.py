@@ -201,6 +201,11 @@ def children(moves, check_board=board, branching=BRANCH):
 ppp=1
 def minimax(depth, player, moves, a, b, check_board=board, branching=BRANCH):
     global ppp
+
+    for event in pygame.event.get():
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_q:
+                sys.exit()
     ppp += 1
 
     if depth == 0:
@@ -246,11 +251,7 @@ def minimax(depth, player, moves, a, b, check_board=board, branching=BRANCH):
             b = min(b, value)
         return (value, best)
 
-def draw_pot(moves, colour=BLACK):
-    for move in moves:
-        pygame.draw.circle(screen, colour, (
-            int((move % BOARD_COLS) * SQUARE_SIZE + SQUARE_SIZE // 2), int((move // BOARD_ROWS) * SQUARE_SIZE + SQUARE_SIZE // 2)), CIRCLE_RADIUS // 5,
-                           CIRCLE_WIDTH // 3)
+
 def erase(checkboard=board):
     for move in range(BOARD_ROWS*BOARD_COLS):
         if checkboard[move] == 0:
@@ -353,6 +354,10 @@ def user_input():
             if event.key == pygame.K_r:
                 restart_game()
                 pygame.display.update()
+
+            if event.key == pygame.K_q:
+                sys.exit()
+
             if event.key == pygame.K_LEFT:
                 if player == 1:
                     if first == 2:
@@ -410,7 +415,6 @@ def computer_move():
     move = best_move(player, last)
     erase()
     mark_square(move, player)
-    draw_pot(children([last]))
     history.append(move)
     if check_win(player, move):
         game_over = True
